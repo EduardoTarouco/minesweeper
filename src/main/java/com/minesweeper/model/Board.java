@@ -47,31 +47,31 @@ public class Board {
         return cellMatrix;
     }
 
-    private RevealResult revealCell(int x, int y) {
+    private BoardResult revealCell(int x, int y) {
         CellClassification revealStatus = getCell(x, y).reveal();
         switch (revealStatus) {
             case BOMB:
-                return new RevealResult(new ArrayList<>(), GameStatus.LOST);
+                return new BoardResult(new ArrayList<>(), GameStatus.LOST);
             case EMPTY:
                 List<Cell> updatedResult = floodFill(x, y);
-                return new RevealResult(updatedResult, GameStatus.CONTINUE);
+                return new BoardResult(updatedResult, GameStatus.CONTINUE);
             case ONE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT:
                 List<Cell> updatedCells = new ArrayList<>();
                 updatedCells.add(getCell(x, y));
-                return new RevealResult(updatedCells, GameStatus.CONTINUE);
+                return new BoardResult(updatedCells, GameStatus.CONTINUE);
             default:
                 throw new RuntimeException("ERROR: unrecognized cell reveal status: " + revealStatus);
         }
     }
 
-    private RevealResult flagCell(int x, int y) {
+    private BoardResult flagCell(int x, int y) {
         Cell cell = getCell(x, y);
         cell.flag();
 
         List<Cell> updatedResult = new ArrayList<>();
         updatedResult.add(cell);
 
-        return new RevealResult(updatedResult, GameStatus.CONTINUE);
+        return new BoardResult(updatedResult, GameStatus.CONTINUE);
     }
 
     private Cell getCell(int x, int y) {
