@@ -3,53 +3,66 @@ package com.minesweeper.main;
 import com.minesweeper.model.Board;
 import com.minesweeper.model.Cell;
 import com.minesweeper.model.CellClassification;
-import javafx.application.Application;
-import javafx.stage.Stage;
 
-import java.util.List;
+public class MineSweeper {
 
-public class MineSweeper extends Application {
+    public class ConsoleColors {
+        public static final String ANSI_RESET = "\u001B[0m";
+        public static final String ANSI_BLACK = "\u001B[30m";
+        public static final String ANSI_RED = "\u001B[31m";
+        public static final String ANSI_GREEN = "\u001B[32m";
+        public static final String ANSI_YELLOW = "\u001B[33m";
+        public static final String ANSI_BLUE = "\u001B[34m";
+        public static final String ANSI_PURPLE = "\u001B[35m";
+        public static final String ANSI_CYAN = "\u001B[36m";
+        public static final String ANSI_WHITE = "\u001B[37m";
+        public static final String ANSI_MAGENTA = "\u001B[45m";
+        public static final String ANSI_BMAGENTA = "\u001B[35;1m";
+        public static final String ANSI_BRED = "\u001B[31;1m";
+    }
 
     public static final String TITLE = "MineSweeper";
 
-    public static void printBoard(List<List<Cell>> cells, Board board) {
+    public static void printBoard(Cell[][] cells, Board board) {
         int bombCounter = 0;
         for (int x = 0; x < board.getHorizontalSize(); x++) {
             for (int y = 0; y < board.getVerticalSize(); y++) {
                 String cellUi = "";
-                CellClassification classification = cells.get(x).get(y).getClassification();
+                CellClassification classification = cells[x][y].getClassification();
                 switch (classification) {
                     case BOMB:
-                        cellUi = " X ";
+                        cellUi = ConsoleColors.ANSI_RED + " X ";
                         bombCounter++;
                         break;
                     case EMPTY:
-                        cellUi = " - ";
+                        cellUi = ConsoleColors.ANSI_RESET + " - ";
                         break;
                     case ONE:
-                        cellUi = " 1 ";
+                        cellUi = ConsoleColors.ANSI_CYAN + " 1 ";
                         break;
                     case TWO:
-                        cellUi = " 2 ";
+                        cellUi = ConsoleColors.ANSI_BLUE + " 2 ";
                         break;
                     case THREE:
-                        cellUi = " 3 ";
+                        cellUi = ConsoleColors.ANSI_PURPLE + " 3 ";
                         break;
                     case FOUR:
-                        cellUi = " 4 ";
+                        cellUi = ConsoleColors.ANSI_GREEN + " 4 ";
                         break;
                     case FIVE:
-                        cellUi = " 5 ";
+                        cellUi = ConsoleColors.ANSI_YELLOW + " 5 ";
                         break;
                     case SIX:
-                        cellUi = " 6 ";
+                        cellUi = ConsoleColors.ANSI_MAGENTA + " 6 ";
                         break;
                     case SEVEN:
-                        cellUi = " 7 ";
+                        cellUi = ConsoleColors.ANSI_BMAGENTA + " 7 ";
                         break;
                     case EIGHT:
-                        cellUi = " 8 ";
+                        cellUi = ConsoleColors.ANSI_BRED + " 8 ";
                         break;
+                    default:
+                        cellUi = ConsoleColors.ANSI_RESET;
                 }
                 System.out.print(cellUi);
             }
@@ -60,14 +73,8 @@ public class MineSweeper extends Application {
 
     public static void main(String[] args) {
         Board board = new Board(12, 15);
-        List<List<Cell>> boardCells = board.populateBoard();
+        Cell[][] boardCells = board.populateBoard();
         printBoard(boardCells, board);
-
-        //launch(args);
     }
 
-    @Override
-    public void start(Stage startingScene) {
-        startingScene.setTitle(TITLE);
-    }
 }

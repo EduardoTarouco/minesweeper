@@ -2,15 +2,16 @@ package com.minesweeper.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import com.minesweeper.exception.IllegalBombNumberException;
 
 public class Board {
 
-    private List<List<Cell>> cellMatrix;
+    private Cell[][] cellMatrix;
     private final int sizeX;
     private final int sizeY;
 
     public Board(int sizeX, int sizeY) {
-        cellMatrix = new ArrayList<>();
+        cellMatrix = new Cell[sizeX][sizeY];
         this.sizeX = sizeX;
         this.sizeY = sizeY;
     }
@@ -23,23 +24,26 @@ public class Board {
         return sizeY;
     }
 
-    public List<List<Cell>> populateBoard() {
+    public Cell[][] populateBoard() {
         for (int i = 0; i < sizeX; i++) {
-            List<Cell> verticalCells = new ArrayList<>();
             for (int j = 0; j < sizeY; j++) {
-                verticalCells.add(new Cell());
+                cellMatrix[i][j] = new Cell();
             }
-            cellMatrix.add(verticalCells);
         }
 
         int numberOfBombs = 24;
-        for(int j = 0; j < numberOfBombs; j++) {
+        if (numberOfBombs >= sizeX * sizeY)
+            throw new IllegalBombNumberException(
+                    "the amount of bombs (" + numberOfBombs + ") greater than the board can handle");
+        for (int j = 0; j < numberOfBombs; j++) {
             int bombX = (int) (Math.random() * sizeX);
             int bombY = (int) (Math.random() * sizeY);
 
-            if(getCell(bombX, bombY).getClassification() == CellClassification.BOMB) {
-                j--; continue;
-            };
+            if (getCell(bombX, bombY).getClassification() == CellClassification.BOMB) {
+                j--;
+                continue;
+            }
+            ;
 
             placeBomb(bombX, bombY);
         }
@@ -75,27 +79,31 @@ public class Board {
     }
 
     private Cell getCell(int x, int y) {
-        return cellMatrix.get(x).get(y);
+        if (x < 0 || x >= sizeX ||
+                y < 0 || y >= sizeY)
+            return null;
+        return cellMatrix[x][y];
     }
 
     private void placeBomb(int bombX, int bombY) {
         getCell(bombX, bombY).placeBomb();
 
-        classifyBombBorder(bombX-1, bombY+1);
-        classifyBombBorder(bombX,      bombY+1);
-        classifyBombBorder(bombX+1, bombY+1);
+        classifyBombBorder(bombX - 1, bombY + 1);
+        classifyBombBorder(bombX, bombY + 1);
+        classifyBombBorder(bombX + 1, bombY + 1);
 
-        classifyBombBorder(bombX-1, bombY);
-        classifyBombBorder(bombX+1, bombY);
+        classifyBombBorder(bombX - 1, bombY);
+        classifyBombBorder(bombX + 1, bombY);
 
-        classifyBombBorder(bombX-1, bombY-1);
-        classifyBombBorder(bombX,      bombY-1);
-        classifyBombBorder(bombX+1, bombY-1);
+        classifyBombBorder(bombX - 1, bombY - 1);
+        classifyBombBorder(bombX, bombY - 1);
+        classifyBombBorder(bombX + 1, bombY - 1);
     }
 
     private void classifyBombBorder(int x, int y) {
         if (x < 0 || x >= sizeX ||
-            y < 0 || y >= sizeY) return;
+                y < 0 || y >= sizeY)
+            return;
 
         getCell(x, y).incrementNumber();
     }
@@ -103,19 +111,22 @@ public class Board {
     private List<Cell> floodFill(int startX, int startY) {
         List<Cell> floodedCells = new ArrayList<>();
 
-        floodedCells.add(depthFirstCellSearch(startX, startY, floodedCells));
+        Cell cell = depthFirstCellSearch(startX, startY, floodedCells);
+        if (cell != null)
+            floodedCells.add(cell);
         return floodedCells;
     }
 
     private Cell depthFirstCellSearch(int x, int y, List<Cell> cellList) {
+        if (x < 0 || x >= sizeX ||
+                y < 0 || y >= sizeY)
+            return null;
+
         Cell analyzedCell = getCell(x, y);
 
-        if (x < 0 || x >= sizeX ||
-            y < 0 || y >= sizeY ||
-            analyzedCell.getClassification() != CellClassification.EMPTY) return null;
-
         if (analyzedCell.getClassification() != CellClassification.EMPTY &&
-            analyzedCell.getClassification() != CellClassification.BOMB) return analyzedCell;
+                analyzedCell.getClassification() != CellClassification.BOMB)
+            return analyzedCell;
 
         cellList.add(depthFirstCellSearch(x + 1, y, cellList));
         depthFirstCellSearch(x - 1, y, cellList);
