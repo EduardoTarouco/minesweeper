@@ -1,7 +1,8 @@
 package com.minesweeper.model;
 
 public enum GameStatus {
-    CONTINUE,
+    NOT_STARTED,
+    RUNNING,
     WON,
     LOST
 }

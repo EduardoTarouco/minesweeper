@@ -9,14 +9,20 @@ public class GameTimer {
     public GameTimer() {
     }
 
-    public void startTimer() {
+    public void start() {
         this.startTime = System.currentTimeMillis();
         this.stopTime = -1;
         this.isRunning = true;
     }
 
-    public vois stopTimer() {
+    public void stop() {
         this.stopTime = System.currentTimeMillis();
+        this.isRunning = false;
+    }
+
+    public void reset() {
+        this.startTime = 0;
+        this.stopTime = 0;
         this.isRunning = false;
     }
 
@@ -24,6 +30,10 @@ public class GameTimer {
         if (!isRunning)
             return 0;
         return (int) ((System.currentTimeMillis() - startTime) / 1000);
+    }
+
+    public int getTotalTimeInSeconds() {
+        return (int) ((stopTime - startTime) / 1000);
     }
 
     public long timeUntilNextSecond() {

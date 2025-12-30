@@ -29,7 +29,8 @@ public class Cell {
     }
 
     void incrementNumber() {
-        if(classification != CellClassification.BOMB) this.classification = classification.next();
+        if (classification != CellClassification.BOMB)
+            this.classification = classification.next();
     }
 
     public boolean isFlagged() {
@@ -40,10 +41,8 @@ public class Cell {
         return isRevealed;
     }
 
-    public CellClassification reveal() {
+    public void reveal() {
         this.isRevealed = true;
-
-        return classification;
     }
 
     public void flag() {
@@ -52,8 +51,10 @@ public class Cell {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         Cell cell = (Cell) o;
         return isFlagged == cell.isFlagged && isRevealed == cell.isRevealed && classification == cell.classification;
     }

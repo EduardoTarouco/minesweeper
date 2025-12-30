@@ -1,13 +1,18 @@
 package com.minesweeper.main;
 
-import com.minesweeper.model.Board;
-import com.minesweeper.model.Cell;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+import com.minesweeper.controller.GameController;
+import com.minesweeper.dto.UpdatedCell;
 import com.minesweeper.model.CellClassification;
 
 public class MineSweeper {
 
-    public class ConsoleColors {
+    public static class ConsoleColors {
         public static final String ANSI_RESET = "\u001B[0m";
+        public static final String ANSI_GRAY = "\u001B[90m";
         public static final String ANSI_BLACK = "\u001B[30m";
         public static final String ANSI_RED = "\u001B[31m";
         public static final String ANSI_GREEN = "\u001B[32m";
@@ -23,58 +28,92 @@ public class MineSweeper {
 
     public static final String TITLE = "MineSweeper";
 
-    public static void printBoard(Cell[][] cells, Board board) {
-        int bombCounter = 0;
-        for (int x = 0; x < board.getHorizontalSize(); x++) {
-            for (int y = 0; y < board.getVerticalSize(); y++) {
+    public static void printBoard(UpdatedCell[][] cells, int sizeX, int sizeY) {
+        for (int x = 0; x < sizeX; x++) {
+            for (int y = 0; y < sizeY; y++) {
                 String cellUi = "";
-                CellClassification classification = cells[x][y].getClassification();
-                switch (classification) {
-                    case BOMB:
-                        cellUi = ConsoleColors.ANSI_RED + " X ";
-                        bombCounter++;
-                        break;
-                    case EMPTY:
-                        cellUi = ConsoleColors.ANSI_RESET + " - ";
-                        break;
-                    case ONE:
-                        cellUi = ConsoleColors.ANSI_CYAN + " 1 ";
-                        break;
-                    case TWO:
-                        cellUi = ConsoleColors.ANSI_BLUE + " 2 ";
-                        break;
-                    case THREE:
-                        cellUi = ConsoleColors.ANSI_PURPLE + " 3 ";
-                        break;
-                    case FOUR:
-                        cellUi = ConsoleColors.ANSI_GREEN + " 4 ";
-                        break;
-                    case FIVE:
-                        cellUi = ConsoleColors.ANSI_YELLOW + " 5 ";
-                        break;
-                    case SIX:
-                        cellUi = ConsoleColors.ANSI_MAGENTA + " 6 ";
-                        break;
-                    case SEVEN:
-                        cellUi = ConsoleColors.ANSI_BMAGENTA + " 7 ";
-                        break;
-                    case EIGHT:
-                        cellUi = ConsoleColors.ANSI_BRED + " 8 ";
-                        break;
-                    default:
-                        cellUi = ConsoleColors.ANSI_RESET;
+                UpdatedCell cell = cells[x][y];
+                CellClassification classification = cell.classification();
+                if (cell.isRevealed()) {
+                    switch (classification) {
+                        case BOMB:
+                            cellUi = ConsoleColors.ANSI_RED + " X " + ConsoleColors.ANSI_RESET;
+                            break;
+                        case EMPTY:
+                            cellUi = ConsoleColors.ANSI_RESET + " + " + ConsoleColors.ANSI_RESET;
+                            break;
+                        case ONE:
+                            cellUi = ConsoleColors.ANSI_CYAN + " 1 " + ConsoleColors.ANSI_RESET;
+                            break;
+                        case TWO:
+                            cellUi = ConsoleColors.ANSI_BLUE + " 2 " + ConsoleColors.ANSI_RESET;
+                            break;
+                        case THREE:
+                            cellUi = ConsoleColors.ANSI_PURPLE + " 3 " + ConsoleColors.ANSI_RESET;
+                            break;
+                        case FOUR:
+                            cellUi = ConsoleColors.ANSI_GREEN + " 4 " + ConsoleColors.ANSI_RESET;
+                            break;
+                        case FIVE:
+                            cellUi = ConsoleColors.ANSI_YELLOW + " 5 " + ConsoleColors.ANSI_RESET;
+                            break;
+                        case SIX:
+                            cellUi = ConsoleColors.ANSI_MAGENTA + " 6 " + ConsoleColors.ANSI_RESET;
+                            break;
+                        case SEVEN:
+                            cellUi = ConsoleColors.ANSI_BMAGENTA + " 7 " + ConsoleColors.ANSI_RESET;
+                            break;
+                        case EIGHT:
+                            cellUi = ConsoleColors.ANSI_BRED + " 8 " + ConsoleColors.ANSI_RESET;
+                            break;
+                        default:
+                            cellUi = ConsoleColors.ANSI_RESET;
+                    }
+                } else {
+                    cellUi = ConsoleColors.ANSI_GRAY + " - " + ConsoleColors.ANSI_RESET;
                 }
                 System.out.print(cellUi);
             }
-            System.out.println("\n");
+            System.out.println();
         }
-        System.out.println(bombCounter);
+    }
+
+    private static void updateBoard(UpdatedCell[][] listToUpdate, List<UpdatedCell> updatedCells) {
+        for (UpdatedCell c : updatedCells) {
+            listToUpdate[c.x()][c.y()] = c;
+        }
+        System.out.println("list of updated cells: " + updatedCells);
+        new Scanner(System.in).nextLine();
+    }
+
+    public static void clearConsole() {
+        System.out.print("\033[H\033[2J");
+        System.out.flush();
     }
 
     public static void main(String[] args) {
-        Board board = new Board(12, 15);
-        Cell[][] boardCells = board.populateBoard();
-        printBoard(boardCells, board);
+        int sizeX = 9;
+        int sizeY = 9;
+
+        Scanner sc = new Scanner(System.in);
+
+        GameController controller = new GameController(sizeX, sizeY);
+
+        UpdatedCell[][] boardCells = controller.setupGame();
+        int col = 0;
+        int row = 0;
+        printBoard(boardCells, sizeX, sizeY);
+        List<UpdatedCell> updatedCells = new ArrayList<>();
+        do {
+            boardCells = controller.getBoardView();
+            printBoard(boardCells, sizeX, sizeY);
+            System.out.println("Insira a linha e coluna da célula que deseje revelar: ");
+            row = sc.nextInt();
+            col = sc.nextInt();
+            updatedCells = controller.handleRevealRequest(row, col);
+            updateBoard(boardCells, updatedCells);
+            clearConsole();
+        } while (row >= 0 && col >= 0);
     }
 
 }
