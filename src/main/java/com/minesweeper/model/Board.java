@@ -20,8 +20,8 @@ public class Board {
         cellMatrix = new Cell[sizeX][sizeY];
         this.sizeX = sizeX;
         this.sizeY = sizeY;
-        // this.amountOfBombs = (int) ((sizeX * sizeY) * 0.12);
-        this.amountOfBombs = 1;
+        this.amountOfBombs = (int) ((sizeX * sizeY) * 0.12);
+        // this.amountOfBombs = 1;
     }
 
     public int getAmountOfBombs() {
@@ -120,9 +120,10 @@ public class Board {
         for (int x = 0; x < sizeX; x++) {
             for (int y = 0; y < sizeY; y++) {
                 Cell analyzedCell = getCell(x, y);
-                if (analyzedCell.getClassification() == CellClassification.BOMB)
+                if (analyzedCell.getClassification() == CellClassification.BOMB) {
                     analyzedCell.reveal();
-                bombsList.add(updatedCellFactory(analyzedCell, x, y));
+                    bombsList.add(updatedCellFactory(analyzedCell, x, y));
+                }
             }
         }
         return bombsList;

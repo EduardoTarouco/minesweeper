@@ -25,14 +25,15 @@ public class GameController {
         return board.viewOnlyMatrix();
     }
 
-    public List<UpdatedCell> handleRevealRequest(int x, int y) {
+    // refatora nome para um mais claro, conforme a classe
+    public List<UpdatedCell> handleRevealRequest(int posX, int posY) {
         if (!gameState.isWon() || !gameState.isGameOver()) {
             if (gameState.isNotStarted()) {
                 gameState.start();
                 timer.start();
             }
 
-            BoardResult revealResult = board.revealCell(x, y);
+            BoardResult revealResult = board.revealCell(posX, posY);
             switch (revealResult.gameStatus()) {
                 case GameStatus.LOST:
                     gameState.gameOver();
@@ -48,7 +49,7 @@ public class GameController {
         return null;
     }
 
-    public List<UpdatedCell> flagCell(int x, int y) {
+    public List<UpdatedCell> handleFlagCell(int x, int y) {
         return board.flagCell(x, y).updatedCells();
     }
 
