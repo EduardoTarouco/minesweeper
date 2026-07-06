@@ -6,7 +6,9 @@ import java.util.Scanner;
 
 import com.minesweeper.controller.GameController;
 import com.minesweeper.dto.UpdatedCell;
+import com.minesweeper.model.BoardResult;
 import com.minesweeper.model.CellClassification;
+import com.minesweeper.model.GameStatus;
 
 public class MineSweeper {
 
@@ -30,7 +32,14 @@ public class MineSweeper {
     public static final String TITLE = "MineSweeper";
 
     public static void printBoard(UpdatedCell[][] cells, int sizeX, int sizeY) {
+        System.out.print(ConsoleColors.ANSI_GRAY + "xy " + ConsoleColors.ANSI_RESET);
+        for (int y = 0; y < sizeY; y++) {
+            System.out.printf(ConsoleColors.ANSI_GRAY + "%-3d" + ConsoleColors.ANSI_RESET, y + 1);
+        }
+        System.out.println();
+
         for (int x = 0; x < sizeX; x++) {
+            System.out.printf(ConsoleColors.ANSI_GRAY + "%-2d" + ConsoleColors.ANSI_RESET, x + 1);
             for (int y = 0; y < sizeY; y++) {
                 String cellUi = "";
                 UpdatedCell cell = cells[x][y];
@@ -44,7 +53,7 @@ public class MineSweeper {
                                     + ConsoleColors.ANSI_RESET;
                             break;
                         case EMPTY:
-                            cellUi = ConsoleColors.ANSI_RESET + " + "
+                            cellUi = ConsoleColors.ANSI_WHITE    + " + "
                                     + ConsoleColors.ANSI_RESET;
                             break;
                         case ONE:
@@ -92,8 +101,10 @@ public class MineSweeper {
     }
 
     private static void updateBoard(UpdatedCell[][] listToUpdate, List<UpdatedCell> updatedCells) {
-        for (UpdatedCell c : updatedCells) {
-            listToUpdate[c.x()][c.y()] = c;
+        if (updatedCells != null) {
+            for (UpdatedCell c : updatedCells) {
+                listToUpdate[c.x()][c.y()] = c;
+            }
         }
     }
 
@@ -103,36 +114,50 @@ public class MineSweeper {
     }
 
     public static void main(String[] args) {
-        int sizeX = 5;
-        int sizeY = 5;
+        int sizeX = 8;
+        int sizeY = 8;
 
         Scanner sc = new Scanner(System.in);
 
         GameController controller = new GameController(sizeX, sizeY);
 
         UpdatedCell[][] boardCells = controller.setupGame();
-        int col, row = 0;
+        int col = 0;
+        int row = 0;
         char resposta = '0';
+        BoardResult revealResult = new BoardResult(new ArrayList<>(), GameStatus.RUNNING);
+        updateBoard(boardCells, revealResult.updatedCells());
         printBoard(boardCells, sizeX, sizeY);
-        List<UpdatedCell> updatedCells = new ArrayList<>();
         do {
-            updateBoard(boardCells, updatedCells);
-            printBoard(boardCells, sizeX, sizeY);
             System.out.println("Insira a linha e coluna da célula que deseje revelar: ");
             row = sc.nextInt() - 1;
             col = sc.nextInt() - 1;
-            System.out.println("Deseja [C]avar ou adicionar uma [B]andeira?");
+
+            System.out.println("Deseja [C]avar ou adicionar uma [B]andeira?   ([R]einiciar jogo)");
             resposta = sc.next().charAt(0);
             switch (resposta) {
                 case 'C', 'c':
-                    updatedCells = controller.handleRevealRequest(row, col);
+                    revealResult = controller.requestReveal(row, col);
                     break;
                 case 'B', 'b':
-                    updatedCells = controller.handleFlagCell(row, col);
+                    revealResult = controller.requestFlag(row, col);
+                    break;
+                case 'R', 'r':
+                    controller.restartGame();
                     break;
             }
+
             clearConsole();
-        } while (row >= 0 && col >= 0);
+            System.out.printf("Bandeiras restantes: %d%n", controller.getAmountOfFlags());
+            updateBoard(boardCells, revealResult.updatedCells());
+            printBoard(boardCells, sizeX, sizeY);
+
+            if(revealResult.gameStatus() == GameStatus.LOST || revealResult.gameStatus() == GameStatus.WON) {
+                String gameResult = revealResult.gameStatus() == GameStatus.LOST ? "LOST" : "WON";
+                System.out.println(" -=== YOU " + gameResult + "! ===- ");
+                break;
+            }
+        } while (revealResult.gameStatus() == GameStatus.RUNNING);
     }
 
 }

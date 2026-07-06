@@ -4,13 +4,27 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.minesweeper.dto.UpdatedCell;
+import com.minesweeper.exception.CellNotFoundException;
 import com.minesweeper.exception.IllegalBombNumberException;
 
 public class Board {
 
     private boolean firstMove = true;
     private Cell[][] cellMatrix;
-    private int amountOfBombs;
+    /*
+     * -=== PARA A LÓGICA DE VENCER ===-
+     * Células descobertas podem ser utilizadas para saber se o usuário venceu (descobriu todas as células sem ter cavado uma bomba antes)
+     *  - Não necessariamente utilizou todas as bandeiras
+     *
+     * TODO:
+     *  - Número de bandeiras limitado ao número de bombas
+     *  - Manter a quantidade total de células registrado em algum canto
+     *  - Utilizar o retorno da descoberta de células para descobrir quantas células foram descobertas
+     *    - Adicionar essa quantidade de células ao total
+     *    - Comparar o total de células descobertas com o total de células (que não forem bombas) do tabuleiro
+     */
+    private int cellsDiscovered;
+    private final int amountOfBombs;
     private final int sizeX;
     private final int sizeY;
 
@@ -21,15 +35,11 @@ public class Board {
         this.sizeX = sizeX;
         this.sizeY = sizeY;
         this.amountOfBombs = (int) ((sizeX * sizeY) * 0.12);
-        // this.amountOfBombs = 1;
+//         this.amountOfBombs = sizeX*sizeY-1;
     }
 
     public int getAmountOfBombs() {
         return amountOfBombs;
-    }
-
-    public void setAmountOfBombs(int amountOfBombs) {
-        this.amountOfBombs = amountOfBombs;
     }
 
     public int getHorizontalSize() {
@@ -42,10 +52,10 @@ public class Board {
 
     public UpdatedCell[][] reset() {
         firstMove = true;
-        return populateBoard();
+        return populateBoard(sizeX, sizeY);
     }
 
-    public UpdatedCell[][] populateBoard() {
+    private UpdatedCell[][] populateBoard(int x, int y) {
         if (firstMove) {
             populateBoardWithBlankCells();
             return viewOnlyMatrix();
@@ -95,7 +105,7 @@ public class Board {
     public BoardResult revealCell(int x, int y) {
         if (firstMove) {
             this.firstMove = false;
-            populateBoard();
+            populateBoard(x, y);
         }
         CellClassification revealStatus = getCell(x, y).getClassification();
         switch (revealStatus) {
@@ -103,12 +113,14 @@ public class Board {
                 return new BoardResult(returnAllBombs(), GameStatus.LOST);
             case EMPTY:
                 List<UpdatedCell> updatedResult = floodFill(x, y);
+                cellsDiscovered += updatedResult.size();
                 return new BoardResult(updatedResult, GameStatus.RUNNING);
             case ONE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT:
                 List<UpdatedCell> updatedCells = new ArrayList<>();
                 Cell cell = getCell(x, y);
                 cell.reveal();
                 updatedCells.add(updatedCellFactory(cell, x, y));
+                cellsDiscovered++;
                 return new BoardResult(updatedCells, GameStatus.RUNNING);
             default:
                 throw new RuntimeException("ERROR: unrecognized cell reveal status: " + revealStatus);
@@ -142,7 +154,7 @@ public class Board {
     private Cell getCell(int x, int y) {
         if (x < 0 || x >= sizeX ||
                 y < 0 || y >= sizeY)
-            return null;
+            throw new CellNotFoundException("Did not found any cell with coordinates " + x + ", " + y + " inside the board matrix");
         return cellMatrix[x][y];
     }
 
@@ -163,7 +175,7 @@ public class Board {
 
     private void classifyBombBorder(int x, int y) {
         if (x < 0 || x >= sizeX ||
-                y < 0 || y >= sizeY)
+            y < 0 || y >= sizeY)
             return;
 
         getCell(x, y).incrementNumber();

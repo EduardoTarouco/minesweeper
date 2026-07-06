@@ -22,3 +22,7 @@ test {
 application {
     mainClass = 'com.minesweeper.main.MineSweeper'
 }
+
+tasks.named('run') {
+    standardInput = System.in
+}

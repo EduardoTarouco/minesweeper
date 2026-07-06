@@ -1,5 +1,6 @@
 package com.minesweeper.controller;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.minesweeper.dto.UpdatedCell;
@@ -13,21 +14,26 @@ public class GameController {
 
     private GameTimer timer;
     private Board board;
+    private int amountOfFlags;
     private GameState gameState;
 
     public GameController(int x, int y) {
         this.timer = new GameTimer();
         this.gameState = new GameState();
         this.board = new Board(x, y);
+        this.amountOfFlags = board.getAmountOfBombs();
     }
 
     public UpdatedCell[][] getBoardView() {
         return board.viewOnlyMatrix();
     }
 
-    // refatora nome para um mais claro, conforme a classe
-    public List<UpdatedCell> handleRevealRequest(int posX, int posY) {
-        if (!gameState.isWon() || !gameState.isGameOver()) {
+    public int getAmountOfFlags() {
+        return this.amountOfFlags;
+    };
+
+    public BoardResult requestReveal(int posX, int posY) {
+        if (!gameState.isGameOver() && !gameState.isWon()) {
             if (gameState.isNotStarted()) {
                 gameState.start();
                 timer.start();
@@ -44,17 +50,24 @@ public class GameController {
                 default:
             }
 
-            return revealResult.updatedCells();
+            return revealResult;
         }
-        return null;
+        return new BoardResult(new ArrayList<>(), gameState.getGameStatus());
     }
 
-    public List<UpdatedCell> handleFlagCell(int x, int y) {
-        return board.flagCell(x, y).updatedCells();
+    public BoardResult requestFlag(int x, int y) {
+        if (!gameState.isGameOver() && !gameState.isWon()) {
+            if (amountOfFlags > 0) {
+                BoardResult flagResult = board.flagCell(x, y);
+                amountOfFlags += flagResult.updatedCells().getFirst().isFlagged() ? -1 : 1;
+                return flagResult;
+            }
+        }
+        return new BoardResult(new ArrayList<>(), gameState.getGameStatus());
     }
 
     public UpdatedCell[][] setupGame() {
-        return board.populateBoard();
+        return board.reset();
     }
 
     public UpdatedCell[][] restartGame() {

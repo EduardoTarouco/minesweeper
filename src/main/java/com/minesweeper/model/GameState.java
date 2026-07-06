@@ -4,9 +4,7 @@ public class GameState {
 
     private GameStatus gameStatus = GameStatus.NOT_STARTED;
 
-    public GameState() {
-        this.gameStatus = GameStatus.RUNNING;
-    }
+    public GameState() {}
 
     public GameStatus getGameStatus() {
         return gameStatus;
