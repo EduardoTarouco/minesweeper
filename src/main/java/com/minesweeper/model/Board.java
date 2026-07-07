@@ -10,18 +10,15 @@ import com.minesweeper.exception.IllegalBombNumberException;
 public class Board {
 
     private boolean firstMove = true;
-    private Cell[][] cellMatrix;
+    private final Cell[][] cellMatrix;
     /*
-     * -=== PARA A LÓGICA DE VENCER ===-
-     * Células descobertas podem ser utilizadas para saber se o usuário venceu (descobriu todas as células sem ter cavado uma bomba antes)
-     *  - Não necessariamente utilizou todas as bandeiras
+     * FIXME:
+     *  - Cavar a mesma célula conta para o total de células descobertas
+     *    -> Posso revisar cada célula do tabuleiro toda vez que uma célula é descoberta
+     *         - Embora conforme o tamanho do tabuleiro isso vai me queimar, ou de implementações futuras, mas por enquanto deve servir
      *
      * TODO:
-     *  - Número de bandeiras limitado ao número de bombas
-     *  - Manter a quantidade total de células registrado em algum canto
-     *  - Utilizar o retorno da descoberta de células para descobrir quantas células foram descobertas
-     *    - Adicionar essa quantidade de células ao total
-     *    - Comparar o total de células descobertas com o total de células (que não forem bombas) do tabuleiro
+     *  - Pôr bandeiras em todas as bombas conclui o jogo instantaneamente
      */
     private int cellsDiscovered;
     private final int amountOfBombs;
@@ -34,8 +31,8 @@ public class Board {
         cellMatrix = new Cell[sizeX][sizeY];
         this.sizeX = sizeX;
         this.sizeY = sizeY;
-        this.amountOfBombs = (int) ((sizeX * sizeY) * 0.12);
-//         this.amountOfBombs = sizeX*sizeY-1;
+            int calculatedAmountOfBombs = (int) ((sizeX * sizeY) * 0.12);
+        this.amountOfBombs = calculatedAmountOfBombs > 0 ? calculatedAmountOfBombs : 1;
     }
 
     public int getAmountOfBombs() {
@@ -105,26 +102,35 @@ public class Board {
     public BoardResult revealCell(int x, int y) {
         if (firstMove) {
             this.firstMove = false;
-            populateBoard(x, y);
-        }
-        CellClassification revealStatus = getCell(x, y).getClassification();
+            populateBoard(x, y);}
+        Cell cell = getCell(x, y);
+
+        if(cell.isFlagged())
+            return new BoardResult(new ArrayList<>(), GameStatus.RUNNING);
+
+        CellClassification revealStatus = cell.getClassification();
         switch (revealStatus) {
             case BOMB:
                 return new BoardResult(returnAllBombs(), GameStatus.LOST);
             case EMPTY:
                 List<UpdatedCell> updatedResult = floodFill(x, y);
                 cellsDiscovered += updatedResult.size();
-                return new BoardResult(updatedResult, GameStatus.RUNNING);
+                return verifyWinCondition(updatedResult);
             case ONE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT:
                 List<UpdatedCell> updatedCells = new ArrayList<>();
-                Cell cell = getCell(x, y);
                 cell.reveal();
                 updatedCells.add(updatedCellFactory(cell, x, y));
                 cellsDiscovered++;
-                return new BoardResult(updatedCells, GameStatus.RUNNING);
+                return verifyWinCondition(updatedCells);
             default:
                 throw new RuntimeException("ERROR: unrecognized cell reveal status: " + revealStatus);
         }
+    }
+
+    private BoardResult verifyWinCondition(List<UpdatedCell> l) {
+        if(cellsDiscovered >= (sizeX*sizeY - amountOfBombs))
+            return new BoardResult(l, GameStatus.WON);
+        return new BoardResult(l, GameStatus.RUNNING);
     }
 
     private List<UpdatedCell> returnAllBombs() {

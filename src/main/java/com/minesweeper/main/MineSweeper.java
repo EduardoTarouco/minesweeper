@@ -114,8 +114,8 @@ public class MineSweeper {
     }
 
     public static void main(String[] args) {
-        int sizeX = 8;
-        int sizeY = 8;
+        int sizeX = 2;
+        int sizeY = 3;
 
         Scanner sc = new Scanner(System.in);
 

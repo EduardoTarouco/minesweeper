@@ -57,7 +57,9 @@ public class GameController {
 
     public BoardResult requestFlag(int x, int y) {
         if (!gameState.isGameOver() && !gameState.isWon()) {
-            if (amountOfFlags > 0) {
+            if (amountOfFlags >= 0) {
+                // verifica se está ou não flaggeada e só então decide se aumenta ou diminui o bagulhino,
+                // do jeito que ta ele primeiro flegga e depois verifica se tem q diminuir ou nao
                 BoardResult flagResult = board.flagCell(x, y);
                 amountOfFlags += flagResult.updatedCells().getFirst().isFlagged() ? -1 : 1;
                 return flagResult;
